@@ -1,0 +1,43 @@
+<js
+      const fs = require('fs');
+      const fsPath = require('path');
+      const recipeName = rt.getParams['name'];
+      const recipeExtension = rt.getParams['extension'];
+      const recipeTextFileName = `${recipeName}.txt`
+      const recipeImageFileName = `${recipeName}.${recipeExtension}`
+
+      let recipeTitle = '';
+      let recipeContents = '';
+
+      rt.readFile(fsPath.join('recipes', recipeTextFileName))
+        .rtOnSuccess((contents) => {
+          const textContents = contents.toString();
+          const recipeArray = textContents.split(/\n([\s\S]+)/);
+          recipeTitle = recipeArray[0];
+          recipeContents = recipeArray[1];
+        })
+        .rtOnError((err) => {
+          console.warn(`Warning: an error occurred while reading the recipe identified by ${recipeName}:`);
+          console.warn(err);
+        });
+
+/js>
+<js rt.runAfter(() => { /js>
+<!doctype html>
+<html>
+  <head>
+    <link rel="icon" href="favicon.ico">
+    <title>No frills recipes</title>
+  </head>
+  <body>
+    <h1>No frills recipes</h1>
+    <h2><js= recipeTitle /js></h2>
+
+    <img src="/recipeImages/<js= recipeImageFileName /js>" />
+
+    <p><js= recipeContents /js></p>
+
+    <a href="/">Go back to the home page</a>
+  </body>
+</html>
+<js }); /js>

@@ -1,0 +1,70 @@
+ <js
+   const fsPath = require('path');
+   const fs = require('fs');
+ /js>
+<!doctype html> 
+<html>
+  <head>
+    <link rel="icon" href="favicon.ico">
+    <title>No frills recipes</title>
+  </head>
+  <body>
+    <h1>New no frills recipe</h1>
+    <js
+      if (rt.postParams['submit']) {
+        let proceed = true;
+
+        if (!rt.postParams['recipe_title']) {
+          rt.print(' - Please provide a title.');
+          proceed = false;
+        }
+
+        if (!rt.uploadedFiles['recipe_photo']) {
+          rt.print(' - Please provide a photo.');
+          proceed = false;
+        }
+
+        if (!rt.postParams['recipe_description']) {
+          rt.print(' - Please provide a recipe description.');
+          proceed = false;
+        }
+
+        if (proceed) {
+          const photoFile = rt.uploadedFiles['recipe_photo'];
+          const moveFrom = photoFile.path;
+          const fileName = photoFile.name;
+          const moveTo = fsPath.join('website', 'recipeImages', fileName);
+          rt.moveFile(moveFrom, moveTo)
+            .rtOnSuccess(() => { rt.print('Recipe photo uploaded successfully!'); })
+            .rtOnError((err) => { rt.print('There was an error.  Please try again later.'); });
+          
+          const fileNameWithNoExtension = fileName.replace(/(.+)\..*$/, '$1');
+          const newRecipeFile = fsPath.join('sites', 'mysite', 'recipes', `${fileNameWithNoExtension}.txt`);
+
+          const recipeFileContents = `${rt.postParams['recipe_title']}\n${rt.postParams['recipe_description']}`;
+
+          fs.writeFile(newRecipeFile, recipeFileContents, rt.waitFor((err) => {
+            if (err) {
+              rt.print('There was an error while adding the recipe.');
+              return;
+            }
+
+            /js>
+            <div>Recipe added successfully!</div>
+            <a href="/">Go back to the home page</a>
+            <js
+          }));
+        }
+      }
+    /js>
+
+    <js rt.runAfter(() => { /js>
+      <form method="post" action="newRecipe.jscp" enctype="multipart/form-data">
+        <p>Recipe title: <input type="text" name="recipe_title" value="" /></p>
+        <p>Recipe photo: <input type="file" name="recipe_photo" value="" /></p>
+        <p>Recipe description: <textarea name="recipe_description"></textarea></p>
+        <p><input type="submit" name="submit" value="Submit recipe" /></p>
+      </form>
+    <js }); /js>
+  </body>
+</html>

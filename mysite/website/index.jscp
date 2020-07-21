@@ -1,0 +1,44 @@
+<js
+      const fs = require('fs');
+      const fsPath = require('path');
+      const recipesList = [];
+
+      const imagesPath = fsPath.join('sites', 'mysite', 'website', 'recipeImages');
+      fs.readdir(imagesPath, rt.waitFor((err, files) => {
+        files.forEach((fileName) => {
+          const [ _ignored, fileNameWithNoExtension, fileExtension ] = fileName.match(/(.+)\.(.*)$/) || [];
+          const fileNameWithTextExtension = `${fileNameWithNoExtension}.txt`;
+          const textPath = fsPath.join('recipes', fileNameWithTextExtension);
+          rt.readFile(textPath)
+            .rtOnSuccess((contents) => {
+              const textContents = contents.toString();
+              const recipeArray = textContents.split(/\n/);
+              const recipeTitle = recipeArray[0];
+              recipesList.push({ title: recipeTitle, name: fileNameWithNoExtension, extension: fileExtension });
+            })
+            .rtOnError((err) => { 
+              console.warn(`Warning: an error occurred while reading the contents of ${fileNameWithTextExtension}:`);
+              console.warn(err);
+            });
+        });
+      }));
+/js>
+<js rt.runAfter(() => { /js>
+<!doctype html> 
+<html>
+  <head>
+    <link rel="icon" href="favicon.ico">
+    <title>No frills recipes</title>
+  </head>
+  <body>
+    <h1>No frills recipes</h1>
+
+    <a href="/newRecipe.jscp">Create a new recipe</a>
+    <ul>
+    <js recipesList.forEach((recipe) => { /js>
+        <li><a href="viewRecipe.jscp?name=<js= recipe.name /js>&extension=<js= recipe.extension /js>"><js= recipe.title /js></a></li>
+    <js }); /js>
+    </ul>
+  </body>
+</html>
+<js }); /js>
